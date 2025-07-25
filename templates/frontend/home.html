@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Dry Clean Pro - Professional Dry Cleaning Services{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Professional Dry Cleaning at Your Doorstep</h1>
+                <p class="lead mb-4">Experience premium dry cleaning services with convenience. We pick up, clean, and deliver your garments with care and attention to detail.</p>
+                <div class="d-flex gap-3">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'create_order' %}" class="btn btn-light btn-lg">Place Order</a>
+                    {% else %}
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg">Get Started</a>
+                    {% endif %}
+                    <a href="{% url 'services' %}" class="btn btn-outline-light btn-lg">Our Services</a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-tshirt" style="font-size: 200px; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="fw-bold mb-3">Why Choose Dry Clean Pro?</h2>
+                <p class="text-muted">We provide exceptional service with modern convenience</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-truck fa-2x text-primary"></i>
+                    </div>
+                    <h5>Free Pickup & Delivery</h5>
+                    <p class="text-muted">We come to you! Schedule pickup and delivery at your convenience.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-star fa-2x text-success"></i>
+                    </div>
+                    <h5>Premium Quality</h5>
+                    <p class="text-muted">Professional cleaning with eco-friendly products and attention to detail.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-clock fa-2x text-warning"></i>
+                    </div>
+                    <h5>Fast Turnaround</h5>
+                    <p class="text-muted">Same-day service available. Most orders completed within 24-48 hours.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Preview -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="fw-bold mb-3">Our Services</h2>
+                <p class="text-muted">Professional cleaning for all your garment needs</p>
+            </div>
+        </div>
+        
+        <div class="row g-4" id="servicesPreview">
+            <!-- Services will be loaded via AJAX -->
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'services' %}" class="btn btn-primary btn-lg">View All Services</a>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="fw-bold mb-3">How It Works</h2>
+                <p class="text-muted">Simple steps to get your clothes professionally cleaned</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="text-white fw-bold">1</span>
+                    </div>
+                    <h5>Schedule Pickup</h5>
+                    <p class="text-muted">Book a pickup time that works for you</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="text-white fw-bold">2</span>
+                    </div>
+                    <h5>We Collect</h5>
+                    <p class="text-muted">Our team picks up your garments</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="text-white fw-bold">3</span>
+                    </div>
+                    <h5>Professional Cleaning</h5>
+                    <p class="text-muted">Expert cleaning with care</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="text-white fw-bold">4</span>
+                    </div>
+                    <h5>Fast Delivery</h5>
+                    <p class="text-muted">Clean clothes delivered to your door</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="fw-bold mb-3">What Our Customers Say</h2>
+                <p class="text-muted">Don't just take our word for it</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                        </div>
+                        <p class="card-text">"Excellent service! They picked up my suits and delivered them perfectly cleaned. Highly recommended!"</p>
+                        <h6 class="fw-bold">John Smith</h6>
+                        <small class="text-muted">Regular Customer</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                        </div>
+                        <p class="card-text">"Convenient pickup and delivery. My clothes always come back looking brand new. Great value!"</p>
+                        <h6 class="fw-bold">Sarah Johnson</h6>
+                        <small class="text-muted">Happy Customer</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                            <i class="fas fa-star text-warning"></i>
+                        </div>
+                        <p class="card-text">"Fast turnaround and professional service. They handle my delicate garments with care."</p>
+                        <h6 class="fw-bold">Mike Wilson</h6>
+                        <small class="text-muted">Satisfied Customer</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load featured services
+    loadFeaturedServices();
+});
+
+function loadFeaturedServices() {
+    $.get('/api/services/', function(data) {
+        // Handle pagination format
+        const services = (data.results || data).slice(0, 6); // Show first 6 services
+        let html = '';
+        
+        services.forEach(function(service) {
+            html += `
+                <div class="col-md-4">
+                    <div class="card service-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-tshirt fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title">${service.name}</h5>
+                            <p class="card-text text-muted">${service.description}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-primary">$${service.base_price}</span>
+                                <a href="/services/" class="btn btn-outline-primary btn-sm">Learn More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        $('#servicesPreview').html(html);
+    }).fail(function() {
+        $('#servicesPreview').html('<div class="col-12 text-center"><p class="text-muted">Services loading...</p></div>');
+    });
+}
+</script>
+{% endblock %} 

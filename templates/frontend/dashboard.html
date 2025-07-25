@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Dry Clean Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="fw-bold mb-1">Welcome back, {{ user.first_name|default:user.username }}!</h2>
+                            <p class="text-muted mb-0">Here's what's happening with your orders</p>
+                        </div>
+                        <a href="{% url 'create_order' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>New Order
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-tshirt fa-2x text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold" id="totalOrders">0</h3>
+                    <p class="text-muted mb-0">Total Orders</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-clock fa-2x text-warning"></i>
+                    </div>
+                    <h3 class="fw-bold" id="pendingOrders">0</h3>
+                    <p class="text-muted mb-0">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-cog fa-2x text-info"></i>
+                    </div>
+                    <h3 class="fw-bold" id="inProcessOrders">0</h3>
+                    <p class="text-muted mb-0">In Process</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-check fa-2x text-success"></i>
+                    </div>
+                    <h3 class="fw-bold" id="completedOrders">0</h3>
+                    <p class="text-muted mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Recent Orders</h5>
+                        <a href="{% url 'orders' %}" class="btn btn-outline-primary btn-sm">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="recentOrders">
+                        <!-- Orders will be loaded via AJAX -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'create_order' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Place New Order
+                        </a>
+                        <a href="{% url 'profile' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-user me-2"></i>Update Profile
+                        </a>
+                        <a href="{% url 'notifications' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-bell me-2"></i>View Notifications
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Notifications -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">Recent Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recentNotifications">
+                        <!-- Notifications will be loaded via AJAX -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadDashboardData();
+});
+
+function loadDashboardData() {
+    // Load orders
+    $.get('/api/orders/', function(data) {
+        updateOrderStats(data);
+        displayRecentOrders(data);
+    }).fail(function() {
+        showAlert('Failed to load orders', 'warning');
+    });
+    
+    // Load notifications
+    $.get('/api/notifications/', function(data) {
+        displayRecentNotifications(data);
+    }).fail(function() {
+        // Silently fail for notifications
+    });
+}
+
+function updateOrderStats(orders) {
+    const stats = {
+        total: orders.length,
+        pending: 0,
+        in_process: 0,
+        completed: 0
+    };
+    
+    orders.forEach(function(order) {
+        switch(order.status) {
+            case 'pending':
+            case 'confirmed':
+                stats.pending++;
+                break;
+            case 'picked_up':
+            case 'in_process':
+            case 'ready':
+                stats.in_process++;
+                break;
+            case 'delivered':
+                stats.completed++;
+                break;
+        }
+    });
+    
+    $('#totalOrders').text(stats.total);
+    $('#pendingOrders').text(stats.pending);
+    $('#inProcessOrders').text(stats.in_process);
+    $('#completedOrders').text(stats.completed);
+}
+
+function displayRecentOrders(orders) {
+    const recentOrders = orders.slice(0, 5); // Show last 5 orders
+    
+    if (recentOrders.length === 0) {
+        $('#recentOrders').html('<p class="text-muted text-center">No orders yet. <a href="/create-order/" class="text-decoration-none">Place your first order</a></p>');
+        return;
+    }
+    
+    let html = '';
+    recentOrders.forEach(function(order) {
+        const statusClass = getStatusClass(order.status);
+        const statusText = getStatusText(order.status);
+        
+        html += `
+            <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                <div>
+                    <h6 class="fw-bold mb-1">${order.order_number}</h6>
+                    <p class="text-muted mb-0">$${order.total_amount}</p>
+                </div>
+                <div class="text-end">
+                    <span class="order-status ${statusClass}">${statusText}</span>
+                    <br>
+                    <small class="text-muted">${formatDate(order.created_at)}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#recentOrders').html(html);
+}
+
+function displayRecentNotifications(notifications) {
+    const recentNotifications = notifications.slice(0, 3); // Show last 3 notifications
+    
+    if (recentNotifications.length === 0) {
+        $('#recentNotifications').html('<p class="text-muted text-center">No notifications</p>');
+        return;
+    }
+    
+    let html = '';
+    recentNotifications.forEach(function(notification) {
+        const isReadClass = notification.is_read ? 'text-muted' : 'fw-bold';
+        
+        html += `
+            <div class="d-flex align-items-start py-2 border-bottom">
+                <div class="flex-grow-1">
+                    <p class="${isReadClass} mb-1">${notification.title}</p>
+                    <small class="text-muted">${formatDate(notification.created_at)}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#recentNotifications').html(html);
+}
+
+function getStatusClass(status) {
+    const statusMap = {
+        'pending': 'status-pending',
+        'confirmed': 'status-confirmed',
+        'picked_up': 'status-picked_up',
+        'in_process': 'status-in_process',
+        'ready': 'status-ready',
+        'delivered': 'status-delivered',
+        'cancelled': 'status-cancelled'
+    };
+    return statusMap[status] || 'status-pending';
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        'pending': 'Pending',
+        'confirmed': 'Confirmed',
+        'picked_up': 'Picked Up',
+        'in_process': 'In Process',
+        'ready': 'Ready',
+        'delivered': 'Delivered',
+        'cancelled': 'Cancelled'
+    };
+    return statusMap[status] || 'Pending';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Pricing - Dry Clean Pro{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row text-center mb-5">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="fw-bold mb-3">Our Pricing</h1>
+            <p class="lead text-muted">Transparent pricing for all our services</p>
+        </div>
+    </div>
+    
+    <div class="row g-4" id="pricingGrid">
+        <!-- Pricing will be loaded via AJAX -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadPricing();
+});
+
+function loadPricing() {
+    $.get('/api/services/', function(data) {
+        displayPricing(data);
+    });
+}
+
+function displayPricing(services) {
+    let html = '';
+    services.forEach(function(service) {
+        html += `
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <h5 class="card-title">${service.name}</h5>
+                        <h2 class="text-primary fw-bold">$${service.base_price}</h2>
+                        <p class="text-muted">${service.description}</p>
+                        <a href="/create-order/" class="btn btn-primary">Order Now</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    $('#pricingGrid').html(html);
+}
+</script>
+{% endblock %} 

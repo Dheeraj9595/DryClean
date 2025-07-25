@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - Dry Clean Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold mb-1">My Orders</h1>
+                    <p class="text-muted mb-0">Track and manage your dry cleaning orders</p>
+                </div>
+                <a href="{% url 'create_order' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>New Order
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center">
+                        <div class="btn-group" role="group" id="statusFilter">
+                            <button type="button" class="btn btn-outline-primary active" data-status="all">All Orders</button>
+                            <button type="button" class="btn btn-outline-warning" data-status="pending">Pending</button>
+                            <button type="button" class="btn btn-outline-info" data-status="in_process">In Process</button>
+                            <button type="button" class="btn btn-outline-success" data-status="delivered">Delivered</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div id="ordersList">
+                        <!-- Orders will be loaded via AJAX -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading your orders...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadOrders();
+    
+    // Add filter click handlers
+    $('#statusFilter button').on('click', function() {
+        $('#statusFilter button').removeClass('active');
+        $(this).addClass('active');
+        const status = $(this).data('status');
+        loadOrders(status);
+    });
+});
+
+function loadOrders(status = 'all') {
+    let url = '/api/orders/';
+    if (status && status !== 'all') {
+        url = `/api/orders/?status=${status}`;
+    }
+    
+    // Show loading state
+    $('#ordersList').html(`
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading your orders...</p>
+        </div>
+    `);
+    
+    $.get(url, function(data) {
+        // Handle pagination format
+        const orders = data.results || data;
+        displayOrders(orders);
+    }).fail(function(xhr) {
+        let errorMessage = 'Failed to load orders';
+        if (xhr.status === 401) {
+            errorMessage = 'Please log in to view your orders';
+        }
+        $('#ordersList').html(`
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <p class="text-muted">${errorMessage}</p>
+                <button class="btn btn-primary" onclick="loadOrders()">Try Again</button>
+            </div>
+        `);
+    });
+}
+
+function displayOrders(orders) {
+    if (!orders || orders.length === 0) {
+        $('#ordersList').html(`
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No orders found</h5>
+                <p class="text-muted">You haven't placed any orders yet.</p>
+                <a href="{% url 'create_order' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Place Your First Order
+                </a>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '';
+    orders.forEach(function(order) {
+        const statusClass = getStatusClass(order.status);
+        const statusText = getStatusText(order.status);
+        const itemCount = order.item_count || (order.items ? order.items.length : 0);
+        
+        html += `
+            <div class="border-bottom py-3 order-item">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h6 class="fw-bold mb-1">${order.order_number}</h6>
+                        <small class="text-muted">${formatDate(order.created_at)}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="order-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="fw-bold text-primary">₹${order.total_amount}</span>
+                    </div>
+                    <div class="col-md-2">
+                        <small class="text-muted">${itemCount} item${itemCount !== 1 ? 's' : ''}</small>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <a href="/orders/${order.id}/" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Pickup: ${formatDate(order.pickup_date)} | 
+                            <i class="fas fa-truck me-1"></i>
+                            Delivery: ${formatDate(order.delivery_date)}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#ordersList').html(html);
+}
+
+function getStatusClass(status) {
+    const statusMap = {
+        'pending': 'status-pending',
+        'confirmed': 'status-confirmed',
+        'picked_up': 'status-picked_up',
+        'in_process': 'status-in_process',
+        'ready': 'status-ready',
+        'out_for_delivery': 'status-ready',
+        'delivered': 'status-delivered',
+        'cancelled': 'status-cancelled'
+    };
+    return statusMap[status] || 'status-pending';
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        'pending': 'Pending',
+        'confirmed': 'Confirmed',
+        'picked_up': 'Picked Up',
+        'in_process': 'In Process',
+        'ready': 'Ready',
+        'out_for_delivery': 'Out for Delivery',
+        'delivered': 'Delivered',
+        'cancelled': 'Cancelled'
+    };
+    return statusMap[status] || 'Pending';
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+</script>
+{% endblock %} 

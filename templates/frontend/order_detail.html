@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Details - Dry Clean Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold mb-1">Order Details</h1>
+                    <p class="text-muted mb-0">Track your order progress and view details</p>
+                </div>
+                <a href="{% url 'orders' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Orders
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Information -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h4 class="fw-bold mb-0">
+                        <i class="fas fa-receipt text-primary me-2"></i>
+                        Order Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div id="orderInfo">
+                        <!-- Order info will be loaded here -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading order details...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h4 class="fw-bold mb-0">
+                        <i class="fas fa-tshirt text-primary me-2"></i>
+                        Order Items
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div id="orderItems">
+                        <!-- Order items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status History -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h4 class="fw-bold mb-0">
+                        <i class="fas fa-history text-primary me-2"></i>
+                        Status History
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div id="statusHistory">
+                        <!-- Status history will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Order Summary -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div id="orderSummary">
+                        <!-- Order summary will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pickup & Delivery -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">Pickup & Delivery</h5>
+                </div>
+                <div class="card-body">
+                    <div id="pickupDelivery">
+                        <!-- Pickup and delivery info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" id="trackOrderBtn">
+                            <i class="fas fa-map-marker-alt me-2"></i>Track Order
+                        </button>
+                        <button class="btn btn-outline-warning" id="cancelOrderBtn" style="display: none;">
+                            <i class="fas fa-times me-2"></i>Cancel Order
+                        </button>
+                        <a href="{% url 'create_order' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Place New Order
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const orderId = window.location.pathname.split('/')[2]; // Extract order ID from URL
+    loadOrderDetails(orderId);
+});
+
+function loadOrderDetails(orderId) {
+    $.get(`/api/orders/${orderId}/`, function(data) {
+        displayOrderInfo(data);
+        displayOrderItems(data.items || []);
+        displayStatusHistory(data.status_history || []);
+        displayOrderSummary(data);
+        displayPickupDelivery(data);
+        setupActions(data);
+    }).fail(function(xhr) {
+        let errorMessage = 'Failed to load order details';
+        if (xhr.status === 404) {
+            errorMessage = 'Order not found';
+        } else if (xhr.status === 401) {
+            errorMessage = 'Please log in to view order details';
+        }
+        
+        $('#orderInfo').html(`
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <p class="text-muted">${errorMessage}</p>
+                <a href="{% url 'orders' %}" class="btn btn-primary">Back to Orders</a>
+            </div>
+        `);
+    });
+}
+
+function displayOrderInfo(order) {
+    const statusClass = getStatusClass(order.status);
+    const statusText = getStatusText(order.status);
+    
+    $('#orderInfo').html(`
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Order Number</label>
+                    <p class="mb-0 fw-bold">${order.order_number}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Order Date</label>
+                    <p class="mb-0">${formatDate(order.created_at)}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Order Type</label>
+                    <p class="mb-0">${order.order_type === 'pickup' ? 'Pickup & Delivery' : 'Drop Off'}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Status</label>
+                    <p class="mb-0">
+                        <span class="order-status ${statusClass}">${statusText}</span>
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Payment Status</label>
+                    <p class="mb-0">
+                        <span class="badge bg-${order.payment_status === 'paid' ? 'success' : 'warning'}">
+                            ${order.payment_status === 'paid' ? 'Paid' : 'Pending'}
+                        </span>
+                    </p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Estimated Completion</label>
+                    <p class="mb-0">${order.estimated_completion ? formatDateTime(order.estimated_completion) : 'TBD'}</p>
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function displayOrderItems(items) {
+    if (!items || items.length === 0) {
+        $('#orderItems').html('<p class="text-muted">No items found</p>');
+        return;
+    }
+    
+    let html = '';
+    items.forEach(function(item) {
+        html += `
+            <div class="border-bottom py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-1">${item.service_name}</h6>
+                        ${item.variant_name ? `<small class="text-muted">${item.variant_name}</small>` : ''}
+                        ${item.description ? `<p class="text-muted small mb-0">${item.description}</p>` : ''}
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <span class="fw-bold">Qty: ${item.quantity}</span>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <span class="text-muted">₹${item.unit_price}</span>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <span class="fw-bold text-primary">₹${item.total_price}</span>
+                    </div>
+                </div>
+                ${item.special_instructions ? `
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                ${item.special_instructions}
+                            </small>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    $('#orderItems').html(html);
+}
+
+function displayStatusHistory(history) {
+    if (!history || history.length === 0) {
+        $('#statusHistory').html('<p class="text-muted">No status history available</p>');
+        return;
+    }
+    
+    let html = '';
+    history.forEach(function(entry) {
+        const statusClass = getStatusClass(entry.status);
+        const statusText = getStatusText(entry.status);
+        
+        html += `
+            <div class="border-bottom py-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="order-status ${statusClass}">${statusText}</span>
+                        ${entry.notes ? `<p class="text-muted small mb-0 mt-1">${entry.notes}</p>` : ''}
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">${formatDateTime(entry.created_at)}</small>
+                        ${entry.updated_by_name ? `<br><small class="text-muted">by ${entry.updated_by_name}</small>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#statusHistory').html(html);
+}
+
+function displayOrderSummary(order) {
+    // Calculate totals from order items
+    let subtotal = 0;
+    let itemCount = 0;
+    
+    if (order.items && order.items.length > 0) {
+        order.items.forEach(function(item) {
+            subtotal += parseFloat(item.total_price || 0);
+            itemCount += parseInt(item.quantity || 0);
+        });
+    }
+    
+    // Calculate tax (5% GST)
+    const tax = subtotal * 0.05;
+    
+    // Calculate delivery fee (free for orders above ₹500, else ₹50)
+    const deliveryFee = subtotal >= 500 ? 0 : 50;
+    
+    // Calculate total
+    const total = subtotal + tax + deliveryFee;
+    
+    $('#orderSummary').html(`
+        <div class="mb-3">
+            <div class="d-flex justify-content-between">
+                <span>Subtotal (${itemCount} items):</span>
+                <span>₹${subtotal.toFixed(2)}</span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="d-flex justify-content-between">
+                <span>Tax (5% GST):</span>
+                <span>₹${tax.toFixed(2)}</span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="d-flex justify-content-between">
+                <span>Delivery Fee:</span>
+                <span>${deliveryFee === 0 ? '<span class="text-success">FREE</span>' : '₹' + deliveryFee.toFixed(2)}</span>
+            </div>
+        </div>
+        <hr>
+        <div class="mb-0">
+            <div class="d-flex justify-content-between">
+                <span class="fw-bold">Total:</span>
+                <span class="fw-bold text-primary fs-5">₹${total.toFixed(2)}</span>
+            </div>
+        </div>
+        ${deliveryFee === 0 ? '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Free delivery on orders above ₹500</small>' : ''}
+    `);
+}
+
+function displayPickupDelivery(order) {
+    $('#pickupDelivery').html(`
+        <div class="mb-3">
+            <h6 class="fw-bold text-primary">
+                <i class="fas fa-calendar-alt me-2"></i>Pickup
+            </h6>
+            <p class="mb-1"><strong>Date:</strong> ${formatDate(order.pickup_date)}</p>
+            <p class="mb-1"><strong>Time:</strong> ${order.pickup_time_slot}</p>
+            <p class="mb-0 text-muted small">${order.pickup_address}</p>
+        </div>
+        <hr>
+        <div class="mb-0">
+            <h6 class="fw-bold text-success">
+                <i class="fas fa-truck me-2"></i>Delivery
+            </h6>
+            <p class="mb-1"><strong>Date:</strong> ${formatDate(order.delivery_date)}</p>
+            <p class="mb-1"><strong>Time:</strong> ${order.delivery_time_slot}</p>
+            <p class="mb-0 text-muted small">${order.delivery_address}</p>
+        </div>
+    `);
+}
+
+function setupActions(order) {
+    // Show cancel button only for pending orders
+    if (order.status === 'pending') {
+        $('#cancelOrderBtn').show();
+    }
+    
+    // Setup cancel order functionality
+    $('#cancelOrderBtn').on('click', function() {
+        if (confirm('Are you sure you want to cancel this order?')) {
+            cancelOrder(order.id);
+        }
+    });
+}
+
+function cancelOrder(orderId) {
+    $.ajax({
+        url: `/api/orders/${orderId}/cancel/`,
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        },
+        success: function(response) {
+            showAlert('Order cancelled successfully', 'success');
+            setTimeout(function() {
+                window.location.reload();
+            }, 1500);
+        },
+        error: function(xhr) {
+            let errorMessage = 'Failed to cancel order';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            }
+            showAlert(errorMessage, 'danger');
+        }
+    });
+}
+
+function getStatusClass(status) {
+    const statusMap = {
+        'pending': 'status-pending',
+        'confirmed': 'status-confirmed',
+        'picked_up': 'status-picked_up',
+        'in_process': 'status-in_process',
+        'ready': 'status-ready',
+        'out_for_delivery': 'status-ready',
+        'delivered': 'status-delivered',
+        'cancelled': 'status-cancelled'
+    };
+    return statusMap[status] || 'status-pending';
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        'pending': 'Pending',
+        'confirmed': 'Confirmed',
+        'picked_up': 'Picked Up',
+        'in_process': 'In Process',
+        'ready': 'Ready',
+        'out_for_delivery': 'Out for Delivery',
+        'delivered': 'Delivered',
+        'cancelled': 'Cancelled'
+    };
+    return statusMap[status] || 'Pending';
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+</script>
+{% endblock %} 

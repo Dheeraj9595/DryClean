@@ -1,0 +1,1038 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Order - Dry Cleaning Service{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-step {
+        transition: all 0.3s ease;
+    }
+    
+    .order-step.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: scale(1.05);
+    }
+    
+    .service-card {
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .service-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .service-card.selected {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+    }
+    
+    .service-card.selected::before {
+        content: '✓';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #667eea;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .quantity-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid #dee2e6;
+        background: white;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .quantity-btn:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .quantity-input {
+        width: 60px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 6px;
+    }
+    
+    .schedule-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .time-slot {
+        display: inline-block;
+        padding: 8px 16px;
+        margin: 4px;
+        border: 2px solid #dee2e6;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+    
+    .time-slot:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    
+    .time-slot.selected {
+        border-color: #667eea;
+        background: #667eea;
+        color: white;
+    }
+    
+    .order-summary {
+        background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 20px;
+        position: sticky;
+        top: 20px;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .summary-item:last-child {
+        border-bottom: none;
+        font-weight: bold;
+        font-size: 18px;
+        color: #667eea;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 20px 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease;
+    }
+    
+    .step-content {
+        display: none;
+    }
+    
+    .step-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .floating-action {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+    }
+    
+    .btn-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 12px 30px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-outline-modern {
+        background: transparent;
+        border: 2px solid #667eea;
+        border-radius: 25px;
+        padding: 10px 28px;
+        color: #667eea;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-modern:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .form-control-modern {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 12px 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control-modern:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .card-modern {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .card-modern:hover {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .order-step {
+            flex-direction: column;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .order-step .rounded-circle {
+            margin: 0 auto 10px auto;
+        }
+        
+        .service-card {
+            margin-bottom: 15px;
+        }
+        
+        .quantity-control {
+            justify-content: center;
+        }
+        
+        .time-slot {
+            display: block;
+            margin: 5px 0;
+            text-align: center;
+        }
+        
+        .order-summary {
+            position: static;
+            margin-top: 20px;
+        }
+        
+        .floating-action {
+            bottom: 20px;
+            right: 20px;
+        }
+        
+        .btn-modern {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+    }
+    
+    /* Animation for service cards */
+    .service-card {
+        animation: slideInUp 0.5s ease forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    
+    .service-card:nth-child(1) { animation-delay: 0.1s; }
+    .service-card:nth-child(2) { animation-delay: 0.2s; }
+    .service-card:nth-child(3) { animation-delay: 0.3s; }
+    .service-card:nth-child(4) { animation-delay: 0.4s; }
+    .service-card:nth-child(5) { animation-delay: 0.5s; }
+    .service-card:nth-child(6) { animation-delay: 0.6s; }
+    
+    @keyframes slideInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold text-primary mb-3">Create Your Order</h1>
+                <p class="lead text-muted">Follow these simple steps to place your dry cleaning order</p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="order-step active d-flex align-items-center" data-step="1">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-tshirt"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Select Services</h6>
+                                <small class="text-muted">Choose what you need</small>
+                            </div>
+                        </div>
+                        <div class="order-step d-flex align-items-center" data-step="2">
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Schedule Pickup</h6>
+                                <small class="text-muted">When & where</small>
+                            </div>
+                        </div>
+                        <div class="order-step d-flex align-items-center" data-step="3">
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Delivery Details</h6>
+                                <small class="text-muted">Return schedule</small>
+                            </div>
+                        </div>
+                        <div class="order-step d-flex align-items-center" data-step="4">
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Review & Confirm</h6>
+                                <small class="text-muted">Final check</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar mt-4">
+                        <div class="progress-fill" style="width: 25%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Main Content -->
+                <div class="col-lg-8">
+                    <form id="orderForm">
+                        <!-- Step 1: Service Selection -->
+                        <div class="step-content active" id="step1">
+                            <div class="card card-modern mb-4">
+                                <div class="card-header bg-white border-0 py-4">
+                                    <h3 class="fw-bold mb-2">
+                                        <i class="fas fa-tshirt text-primary me-2"></i>
+                                        Select Your Services
+                                    </h3>
+                                    <p class="text-muted mb-0">Choose from our professional dry cleaning services</p>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Search and Filter -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light border-end-0">
+                                                    <i class="fas fa-search text-muted"></i>
+                                                </span>
+                                                <input type="text" class="form-control border-start-0" id="serviceSearch" placeholder="Search services...">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <select class="form-select" id="categoryFilter">
+                                                <option value="">All Categories</option>
+                                                <option value="dry_cleaning">Dry Cleaning</option>
+                                                <option value="laundry">Laundry</option>
+                                                <option value="pressing">Pressing</option>
+                                                <option value="stain_removal">Stain Removal</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Quick Stats -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-3 col-6 mb-3">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <div class="fw-bold text-primary" id="selectedCount">0</div>
+                                                <small class="text-muted">Selected</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6 mb-3">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <div class="fw-bold text-success" id="totalItems">0</div>
+                                                <small class="text-muted">Total Items</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6 mb-3">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <div class="fw-bold text-info" id="subtotalDisplay">₹0.00</div>
+                                                <small class="text-muted">Subtotal</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 col-6 mb-3">
+                                            <div class="text-center p-3 bg-light rounded">
+                                                <div class="fw-bold text-warning" id="estimatedTime">1-2 days</div>
+                                                <small class="text-muted">Est. Time</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row" id="servicesGrid">
+                                        <!-- Services will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Pickup Schedule -->
+                        <div class="step-content" id="step2">
+                            <div class="card card-modern mb-4">
+                                <div class="card-header bg-white border-0 py-4">
+                                    <h3 class="fw-bold mb-2">
+                                        <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                        Pickup Schedule
+                                    </h3>
+                                    <p class="text-muted mb-0">When and where should we pick up your items?</p>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="pickupDate" class="form-label fw-bold">Pickup Date</label>
+                                                <input type="date" class="form-control form-control-modern" id="pickupDate" name="pickup_date" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">Pickup Time Slot</label>
+                                                <div class="d-flex flex-wrap">
+                                                    <span class="time-slot" data-time="9:00 AM - 12:00 PM">9:00 AM - 12:00 PM</span>
+                                                    <span class="time-slot" data-time="12:00 PM - 3:00 PM">12:00 PM - 3:00 PM</span>
+                                                    <span class="time-slot" data-time="3:00 PM - 6:00 PM">3:00 PM - 6:00 PM</span>
+                                                </div>
+                                                <input type="hidden" id="pickupTime" name="pickup_time_slot" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="pickupAddress" class="form-label fw-bold">Pickup Address</label>
+                                        <textarea class="form-control form-control-modern" id="pickupAddress" name="pickup_address" rows="3" placeholder="Enter your pickup address..." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Delivery Schedule -->
+                        <div class="step-content" id="step3">
+                            <div class="card card-modern mb-4">
+                                <div class="card-header bg-white border-0 py-4">
+                                    <h3 class="fw-bold mb-2">
+                                        <i class="fas fa-truck text-primary me-2"></i>
+                                        Delivery Schedule
+                                    </h3>
+                                    <p class="text-muted mb-0">When and where should we deliver your cleaned items?</p>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="deliveryDate" class="form-label fw-bold">Delivery Date</label>
+                                                <input type="date" class="form-control form-control-modern" id="deliveryDate" name="delivery_date" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">Delivery Time Slot</label>
+                                                <div class="d-flex flex-wrap">
+                                                    <span class="time-slot" data-time="9:00 AM - 12:00 PM">9:00 AM - 12:00 PM</span>
+                                                    <span class="time-slot" data-time="12:00 PM - 3:00 PM">12:00 PM - 3:00 PM</span>
+                                                    <span class="time-slot" data-time="3:00 PM - 6:00 PM">3:00 PM - 6:00 PM</span>
+                                                </div>
+                                                <input type="hidden" id="deliveryTime" name="delivery_time_slot" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label for="deliveryAddress" class="form-label fw-bold">Delivery Address</label>
+                                        <textarea class="form-control form-control-modern" id="deliveryAddress" name="delivery_address" rows="3" placeholder="Enter your delivery address..." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Special Instructions -->
+                        <div class="step-content" id="step4">
+                            <div class="card card-modern mb-4">
+                                <div class="card-header bg-white border-0 py-4">
+                                    <h3 class="fw-bold mb-2">
+                                        <i class="fas fa-edit text-primary me-2"></i>
+                                        Special Instructions
+                                    </h3>
+                                    <p class="text-muted mb-0">Any special requirements or notes for your order?</p>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-4">
+                                        <label for="specialInstructions" class="form-label fw-bold">Additional Notes</label>
+                                        <textarea class="form-control form-control-modern" id="specialInstructions" name="special_instructions" rows="4" placeholder="Any special instructions, stains to treat, fabric preferences, etc..."></textarea>
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Pro Tip:</strong> Mention any specific stains or fabric types for better treatment results.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Sidebar - Order Summary -->
+                <div class="col-lg-4">
+                    <div class="order-summary">
+                        <h4 class="fw-bold mb-4">
+                            <i class="fas fa-receipt text-primary me-2"></i>
+                            Order Summary
+                        </h4>
+                        
+                        <div id="orderSummary">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-tshirt fa-3x mb-3"></i>
+                                <p>Select services to see your order summary</p>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="summary-item">
+                            <span class="fw-bold">Subtotal:</span>
+                            <span id="subtotal">₹0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Service Fee:</span>
+                            <span>₹2.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="fw-bold">Total Amount:</span>
+                            <span class="fw-bold text-primary fs-5" id="totalAmount">₹0.00</span>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-modern" id="nextStepBtn" disabled>
+                                <span id="nextStepText">Next Step</span>
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-modern" id="prevStepBtn" style="display: none;">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Previous Step
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Secure payment processing
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="floating-action">
+    <button type="button" class="btn btn-modern btn-lg" id="placeOrderBtn" style="display: none;">
+        <i class="fas fa-check me-2"></i>
+        Place Order
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+let selectedServices = [];
+
+$(document).ready(function() {
+    loadServices();
+    setDefaultDates();
+    loadUserAddress();
+    setupEventListeners();
+    
+    // Set minimum dates
+    const today = new Date().toISOString().split('T')[0];
+    $('#pickupDate').attr('min', today);
+    $('#deliveryDate').attr('min', today);
+});
+
+function setupEventListeners() {
+    // Time slot selection
+    $('.time-slot').on('click', function() {
+        $(this).siblings().removeClass('selected');
+        $(this).addClass('selected');
+        
+        const timeValue = $(this).data('time');
+        const isPickup = $(this).closest('#step2').length > 0;
+        
+        if (isPickup) {
+            $('#pickupTime').val(timeValue);
+        } else {
+            $('#deliveryTime').val(timeValue);
+        }
+        
+        updateNextButton();
+    });
+    
+    // Navigation buttons
+    $('#nextStepBtn').on('click', nextStep);
+    $('#prevStepBtn').on('click', prevStep);
+    $('#placeOrderBtn').on('click', placeOrder);
+    
+    // Search and filter functionality
+    $('#serviceSearch').on('input', filterServices);
+    $('#categoryFilter').on('change', filterServices);
+    
+    // Pickup date change
+    $('#pickupDate').on('change', function() {
+        const pickupDate = new Date(this.value);
+        const deliveryDate = new Date(pickupDate);
+        deliveryDate.setDate(deliveryDate.getDate() + 1);
+        $('#deliveryDate').attr('min', deliveryDate.toISOString().split('T')[0]);
+        
+        if ($('#deliveryDate').val() && new Date($('#deliveryDate').val()) < deliveryDate) {
+            $('#deliveryDate').val(deliveryDate.toISOString().split('T')[0]);
+        }
+    });
+}
+
+function setDefaultDates() {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    $('#pickupDate').val(tomorrow.toISOString().split('T')[0]);
+    
+    const deliveryDate = new Date(tomorrow);
+    deliveryDate.setDate(deliveryDate.getDate() + 1);
+    $('#deliveryDate').val(deliveryDate.toISOString().split('T')[0]);
+}
+
+function loadUserAddress() {
+    $.get('/api/auth/user/', function(data) {
+        if (data.userprofile) {
+            const address = `${data.userprofile.address}, ${data.userprofile.city}, ${data.userprofile.state} ${data.userprofile.pincode}`;
+            $('#pickupAddress').val(address);
+            $('#deliveryAddress').val(address);
+        }
+    });
+}
+
+function loadServices() {
+    $.get('/api/services/', function(data) {
+        const services = data.results || data;
+        displayServices(services);
+    }).fail(function() {
+        $('#servicesGrid').html('<div class="col-12 text-center"><p class="text-muted">Failed to load services</p></div>');
+    });
+}
+
+function displayServices(services) {
+    let html = '';
+    services.forEach(function(service) {
+        html += `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="service-card card h-100" data-service-id="${service.id}" data-service-name="${service.name}" data-service-price="${service.base_price}" data-service-category="${service.category}">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-tshirt fa-2x text-primary"></i>
+                        </div>
+                        <h5 class="card-title fw-bold mb-2">${service.name}</h5>
+                        <p class="card-text text-muted small mb-3">${service.description}</p>
+                        <div class="fw-bold text-primary mb-3">₹${service.base_price}</div>
+                        
+                        <div class="quantity-control">
+                            <button type="button" class="quantity-btn" onclick="changeQuantity(${service.id}, -1)">-</button>
+                            <input type="number" class="quantity-input" value="0" min="0" max="10" data-service-id="${service.id}" readonly>
+                            <button type="button" class="quantity-btn" onclick="changeQuantity(${service.id}, 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#servicesGrid').html(html);
+    
+    // Add click event for service selection
+    $('.service-card').on('click', function() {
+        const serviceId = $(this).data('service-id');
+        const quantityInput = $(this).find('.quantity-input');
+        const currentQty = parseInt(quantityInput.val()) || 0;
+        
+        if (currentQty === 0) {
+            quantityInput.val(1);
+            $(this).addClass('selected');
+        }
+        
+        updateOrderSummary();
+        updateQuickStats();
+        updateNextButton();
+    });
+}
+
+function changeQuantity(serviceId, change) {
+    const card = $(`.service-card[data-service-id="${serviceId}"]`);
+    const input = card.find('.quantity-input');
+    let currentQty = parseInt(input.val()) || 0;
+    let newQty = currentQty + change;
+    
+    if (newQty < 0) newQty = 0;
+    if (newQty > 10) newQty = 10;
+    
+    input.val(newQty);
+    
+    if (newQty > 0) {
+        card.addClass('selected');
+    } else {
+        card.removeClass('selected');
+    }
+    
+    updateOrderSummary();
+    updateQuickStats();
+    updateNextButton();
+}
+
+function updateOrderSummary() {
+    let subtotal = 0;
+    let summaryHtml = '';
+    let itemCount = 0;
+    
+    $('.service-card').each(function() {
+        const serviceId = $(this).data('service-id');
+        const serviceName = $(this).data('service-name');
+        const servicePrice = parseFloat($(this).data('service-price'));
+        const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+        
+        if (quantity > 0) {
+            const itemTotal = quantity * servicePrice;
+            subtotal += itemTotal;
+            itemCount++;
+            
+            summaryHtml += `
+                <div class="summary-item">
+                    <div>
+                        <div class="fw-bold">${serviceName}</div>
+                        <small class="text-muted">Qty: ${quantity} × ₹${servicePrice}</small>
+                    </div>
+                    <span class="fw-bold">₹${itemTotal.toFixed(2)}</span>
+                </div>
+            `;
+        }
+    });
+    
+    if (itemCount > 0) {
+        // Calculate tax (5% GST)
+        const tax = subtotal * 0.05;
+        
+        // Calculate delivery fee (free for orders above ₹500, else ₹50)
+        const deliveryFee = subtotal >= 500 ? 0 : 50;
+        
+        // Calculate total
+        const total = subtotal + tax + deliveryFee;
+        
+        // Add tax and delivery fee to summary
+        summaryHtml += `
+            <hr>
+            <div class="summary-item">
+                <div>
+                    <div class="fw-bold">Subtotal (${itemCount} items)</div>
+                </div>
+                <span class="fw-bold">₹${subtotal.toFixed(2)}</span>
+            </div>
+            <div class="summary-item">
+                <div>
+                    <div class="fw-bold">Tax (5% GST)</div>
+                </div>
+                <span class="fw-bold">₹${tax.toFixed(2)}</span>
+            </div>
+            <div class="summary-item">
+                <div>
+                    <div class="fw-bold">Delivery Fee</div>
+                    ${deliveryFee === 0 ? '<small class="text-success">Free delivery on orders above ₹500</small>' : ''}
+                </div>
+                <span class="fw-bold">${deliveryFee === 0 ? '<span class="text-success">FREE</span>' : '₹' + deliveryFee.toFixed(2)}</span>
+            </div>
+            <hr>
+            <div class="summary-item">
+                <div>
+                    <div class="fw-bold fs-5">Total Amount</div>
+                </div>
+                <span class="fw-bold text-primary fs-5">₹${total.toFixed(2)}</span>
+            </div>
+        `;
+        
+        $('#orderSummary').html(summaryHtml);
+        $('#subtotal').text('₹' + subtotal.toFixed(2));
+        $('#totalAmount').text('₹' + total.toFixed(2));
+    } else {
+        $('#orderSummary').html(`
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-tshirt fa-3x mb-3"></i>
+                <p>Select services to see your order summary</p>
+            </div>
+        `);
+        $('#subtotal').text('₹0.00');
+        $('#totalAmount').text('₹0.00');
+    }
+}
+
+function updateQuickStats() {
+    let selectedCount = 0;
+    let totalItems = 0;
+    let subtotal = 0;
+    
+    $('.service-card').each(function() {
+        const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+        const price = parseFloat($(this).data('service-price'));
+        
+        if (quantity > 0) {
+            selectedCount++;
+            totalItems += quantity;
+            subtotal += quantity * price;
+        }
+    });
+    
+    $('#selectedCount').text(selectedCount);
+    $('#totalItems').text(totalItems);
+    $('#subtotalDisplay').text('₹' + subtotal.toFixed(2));
+    
+    // Update estimated time based on total items
+    if (totalItems <= 5) {
+        $('#estimatedTime').text('1-2 days');
+    } else if (totalItems <= 10) {
+        $('#estimatedTime').text('2-3 days');
+    } else {
+        $('#estimatedTime').text('3-4 days');
+    }
+}
+
+function filterServices() {
+    const searchTerm = $('#serviceSearch').val().toLowerCase();
+    const selectedCategory = $('#categoryFilter').val();
+    
+    $('.service-card').each(function() {
+        const serviceName = $(this).data('service-name').toLowerCase();
+        const serviceDescription = $(this).find('.card-text').text().toLowerCase();
+        const serviceCategory = $(this).data('service-category');
+        
+        const matchesSearch = serviceName.includes(searchTerm) || serviceDescription.includes(searchTerm);
+        const matchesCategory = !selectedCategory || serviceCategory === selectedCategory;
+        
+        if (matchesSearch && matchesCategory) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+}
+
+function updateNextButton() {
+    const canProceed = canProceedToNextStep();
+    $('#nextStepBtn').prop('disabled', !canProceed);
+    
+    if (canProceed) {
+        $('#nextStepBtn').removeClass('btn-secondary').addClass('btn-modern');
+    } else {
+        $('#nextStepBtn').removeClass('btn-modern').addClass('btn-secondary');
+    }
+}
+
+function canProceedToNextStep() {
+    switch(currentStep) {
+        case 1:
+            return $('.service-card.selected').length > 0;
+        case 2:
+            return $('#pickupDate').val() && $('#pickupTime').val() && $('#pickupAddress').val().trim();
+        case 3:
+            return $('#deliveryDate').val() && $('#deliveryTime').val() && $('#deliveryAddress').val().trim();
+        case 4:
+            return true;
+        default:
+            return false;
+    }
+}
+
+function nextStep() {
+    if (currentStep < totalSteps) {
+        currentStep++;
+        updateStepDisplay();
+    }
+}
+
+function prevStep() {
+    if (currentStep > 1) {
+        currentStep--;
+        updateStepDisplay();
+    }
+}
+
+function updateStepDisplay() {
+    // Update step indicators
+    $('.order-step').removeClass('active');
+    $(`.order-step[data-step="${currentStep}"]`).addClass('active');
+    
+    // Update progress bar
+    const progress = (currentStep / totalSteps) * 100;
+    $('.progress-fill').css('width', progress + '%');
+    
+    // Show/hide step content
+    $('.step-content').removeClass('active');
+    $(`#step${currentStep}`).addClass('active');
+    
+    // Update navigation buttons
+    if (currentStep === 1) {
+        $('#prevStepBtn').hide();
+        $('#nextStepBtn').show();
+        $('#placeOrderBtn').hide();
+        $('#nextStepText').text('Next Step');
+    } else if (currentStep === totalSteps) {
+        $('#prevStepBtn').show();
+        $('#nextStepBtn').hide();
+        $('#placeOrderBtn').show();
+    } else {
+        $('#prevStepBtn').show();
+        $('#nextStepBtn').show();
+        $('#placeOrderBtn').hide();
+        $('#nextStepText').text('Next Step');
+    }
+    
+    updateNextButton();
+}
+
+function placeOrder() {
+    if (!canProceedToNextStep()) {
+        showAlert('Please complete all required fields', 'warning');
+        return;
+    }
+    
+    // Show loading state
+    $('#placeOrderBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Placing Order...');
+    
+    // Collect order data
+    const orderData = {
+        order_type: 'pickup', // Changed from 'dry_cleaning' to 'pickup'
+        pickup_date: $('#pickupDate').val(),
+        pickup_time_slot: $('#pickupTime').val(),
+        pickup_address: $('#pickupAddress').val(),
+        delivery_date: $('#deliveryDate').val(),
+        delivery_time_slot: $('#deliveryTime').val(),
+        delivery_address: $('#deliveryAddress').val(),
+        special_instructions: $('#specialInstructions').val(),
+        items: []
+    };
+    
+    // Collect service items with correct format
+    $('.service-card').each(function() {
+        const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+        if (quantity > 0) {
+            orderData.items.push({
+                service_id: $(this).data('service-id'), // Changed from 'service' to 'service_id'
+                quantity: quantity,
+                description: $(this).data('service-name'),
+                special_instructions: ''
+            });
+        }
+    });
+    
+    // Submit order
+    console.log('Submitting order data:', orderData); // Debug log
+    
+    $.ajax({
+        url: '/api/orders/',
+        method: 'POST',
+        data: JSON.stringify(orderData),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        },
+        success: function(response) {
+            console.log('Order placed successfully:', response); // Debug log
+            showAlert('Order placed successfully! Redirecting to orders page...', 'success');
+            setTimeout(function() {
+                window.location.href = '/orders/';
+            }, 2000);
+        },
+        error: function(xhr) {
+            console.log('Order placement failed:', xhr.responseJSON); // Debug log
+            let errorMessage = 'Failed to place order. Please try again.';
+            if (xhr.responseJSON) {
+                if (xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                } else if (xhr.responseJSON.detail) {
+                    errorMessage = xhr.responseJSON.detail;
+                } else if (typeof xhr.responseJSON === 'object') {
+                    // Handle validation errors
+                    const errors = [];
+                    for (const [field, messages] of Object.entries(xhr.responseJSON)) {
+                        if (Array.isArray(messages)) {
+                            errors.push(`${field}: ${messages.join(', ')}`);
+                        } else {
+                            errors.push(`${field}: ${messages}`);
+                        }
+                    }
+                    errorMessage = errors.join('; ');
+                }
+            }
+            showAlert(errorMessage, 'danger');
+        },
+        complete: function() {
+            $('#placeOrderBtn').prop('disabled', false).html('<i class="fas fa-check me-2"></i>Place Order');
+        }
+    });
+}
+</script>
+{% endblock %} 

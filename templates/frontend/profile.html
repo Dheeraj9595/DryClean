@@ -1,0 +1,706 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Dry Clean Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold mb-1">My Profile</h1>
+                    <p class="text-muted mb-0">Manage your account information and preferences</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2" id="editProfileBtn">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </button>
+                    <button class="btn btn-primary" id="saveProfileBtn" style="display: none;">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Profile Section -->
+        <div class="col-lg-8">
+            <!-- Personal Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h4 class="fw-bold mb-0">
+                        <i class="fas fa-user text-primary me-2"></i>
+                        Personal Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div id="personalInfo">
+                        <!-- Personal info will be loaded here -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading profile information...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h4 class="fw-bold mb-0">
+                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                        Address Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div id="addressInfo">
+                        <!-- Address info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Preferences -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h4 class="fw-bold mb-0">
+                        <i class="fas fa-bell text-primary me-2"></i>
+                        Notification Preferences
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div id="notificationPrefs">
+                        <!-- Notification preferences will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Profile Summary -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">Profile Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div id="profileSummary">
+                        <!-- Profile summary will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">Account Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div id="accountStats">
+                        <!-- Account stats will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">Account Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-warning" id="changePasswordBtn">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </button>
+                        <button class="btn btn-outline-info" id="exportDataBtn">
+                            <i class="fas fa-download me-2"></i>Export My Data
+                        </button>
+                        <button class="btn btn-outline-danger" id="deleteAccountBtn">
+                            <i class="fas fa-trash me-2"></i>Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="savePasswordBtn">Change Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Delete Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All your data will be permanently deleted.
+                </div>
+                <p>Please type "DELETE" to confirm account deletion:</p>
+                <input type="text" class="form-control" id="deleteConfirmation" placeholder="Type DELETE to confirm">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadProfileData();
+    setupEventHandlers();
+});
+
+function loadProfileData() {
+    // Load user data
+    $.get('/api/auth/user/', function(userData) {
+        // Load profile data
+        $.get('/api/auth/profile/', function(profileData) {
+            // Combine user and profile data
+            const combinedData = {
+                ...userData,
+                ...profileData
+            };
+            
+            displayPersonalInfo(combinedData);
+            displayAddressInfo(combinedData);
+            displayProfileSummary(combinedData);
+            loadNotificationPreferences();
+            loadAccountStats();
+        }).fail(function(xhr) {
+            console.log('Failed to load profile data, using user data only');
+            displayPersonalInfo(userData);
+            displayAddressInfo(userData);
+            displayProfileSummary(userData);
+            loadNotificationPreferences();
+            loadAccountStats();
+        });
+    }).fail(function(xhr) {
+        let errorMessage = 'Failed to load profile data';
+        if (xhr.status === 401) {
+            errorMessage = 'Please log in to view your profile';
+        }
+        showAlert(errorMessage, 'danger');
+    });
+}
+
+function displayPersonalInfo(user) {
+    const isEditing = $('#editProfileBtn').text().includes('Cancel');
+    
+    $('#personalInfo').html(`
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">First Name</label>
+                    ${isEditing ? 
+                        `<input type="text" class="form-control" id="firstName" value="${user.first_name || ''}">` :
+                        `<p class="mb-0">${user.first_name || 'Not provided'}</p>`
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Last Name</label>
+                    ${isEditing ? 
+                        `<input type="text" class="form-control" id="lastName" value="${user.last_name || ''}">` :
+                        `<p class="mb-0">${user.last_name || 'Not provided'}</p>`
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Email</label>
+                    <p class="mb-0">${user.email}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Phone Number</label>
+                    ${isEditing ? 
+                        `<input type="tel" class="form-control" id="phoneNumber" value="${user.phone_number || ''}">` :
+                        `<p class="mb-0">${user.phone_number || 'Not provided'}</p>`
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Date of Birth</label>
+                    ${isEditing ? 
+                        `<input type="date" class="form-control" id="dateOfBirth" value="${user.date_of_birth || ''}">` :
+                        `<p class="mb-0">${user.date_of_birth ? formatDate(user.date_of_birth) : 'Not provided'}</p>`
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Gender</label>
+                    ${isEditing ? 
+                        `<select class="form-select" id="gender">
+                            <option value="">Select Gender</option>
+                            <option value="M" ${user.gender === 'M' ? 'selected' : ''}>Male</option>
+                            <option value="F" ${user.gender === 'F' ? 'selected' : ''}>Female</option>
+                            <option value="O" ${user.gender === 'O' ? 'selected' : ''}>Other</option>
+                        </select>` :
+                        `<p class="mb-0">${getGenderText(user.gender)}</p>`
+                    }
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function displayAddressInfo(user) {
+    const isEditing = $('#editProfileBtn').text().includes('Cancel');
+    
+    $('#addressInfo').html(`
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Street Address</label>
+                    ${isEditing ? 
+                        `<input type="text" class="form-control" id="streetAddress" value="${user.street_address || ''}">` :
+                        `<p class="mb-0">${user.street_address || 'Not provided'}</p>`
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">City</label>
+                    ${isEditing ? 
+                        `<input type="text" class="form-control" id="city" value="${user.city || ''}">` :
+                        `<p class="mb-0">${user.city || 'Not provided'}</p>`
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">State</label>
+                    ${isEditing ? 
+                        `<input type="text" class="form-control" id="state" value="${user.state || ''}">` :
+                        `<p class="mb-0">${user.state || 'Not provided'}</p>`
+                    }
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">ZIP Code</label>
+                    ${isEditing ? 
+                        `<input type="text" class="form-control" id="zipCode" value="${user.pincode || ''}">` :
+                        `<p class="mb-0">${user.pincode || 'Not provided'}</p>`
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Country</label>
+                    ${isEditing ? 
+                        `<input type="text" class="form-control" id="country" value="${user.country || ''}">` :
+                        `<p class="mb-0">${user.country || 'Not provided'}</p>`
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Preferred Pickup Time</label>
+                    ${isEditing ? 
+                        `<select class="form-select" id="preferredPickupTime">
+                            <option value="">Select Time</option>
+                            <option value="morning" ${user.preferred_pickup_time === 'morning' ? 'selected' : ''}>Morning (8 AM - 12 PM)</option>
+                            <option value="afternoon" ${user.preferred_pickup_time === 'afternoon' ? 'selected' : ''}>Afternoon (12 PM - 4 PM)</option>
+                            <option value="evening" ${user.preferred_pickup_time === 'evening' ? 'selected' : ''}>Evening (4 PM - 8 PM)</option>
+                        </select>` :
+                        `<p class="mb-0">${getPickupTimeText(user.preferred_pickup_time)}</p>`
+                    }
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function displayProfileSummary(user) {
+    $('#profileSummary').html(`
+        <div class="text-center mb-3">
+            <div class="avatar-placeholder bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
+                ${user.first_name ? user.first_name.charAt(0).toUpperCase() : 'U'}
+            </div>
+        </div>
+        <div class="text-center mb-3">
+            <h5 class="fw-bold mb-1">${user.first_name || 'User'} ${user.last_name || ''}</h5>
+            <p class="text-muted mb-0">${user.email}</p>
+        </div>
+        <div class="border-top pt-3">
+            <div class="row text-center">
+                <div class="col-6">
+                    <h6 class="fw-bold text-primary mb-1" id="totalOrders">-</h6>
+                    <small class="text-muted">Total Orders</small>
+                </div>
+                <div class="col-6">
+                    <h6 class="fw-bold text-success mb-1" id="completedOrders">-</h6>
+                    <small class="text-muted">Completed</small>
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function loadNotificationPreferences() {
+    $.get('/api/notifications/preferences/', function(data) {
+        displayNotificationPreferences(data);
+    }).fail(function() {
+        // Use default preferences if API fails
+        displayNotificationPreferences({
+            email_notifications: true,
+            sms_notifications: false,
+            order_updates: true,
+            promotions: false,
+            newsletter: false
+        });
+    });
+}
+
+function displayNotificationPreferences(prefs) {
+    const isEditing = $('#editProfileBtn').text().includes('Cancel');
+    
+    $('#notificationPrefs').html(`
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="fw-bold mb-3">Notification Channels</h6>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" ${prefs.email_notifications ? 'checked' : ''} ${!isEditing ? 'disabled' : ''}>
+                        <label class="form-check-label" for="emailNotifications">
+                            Email Notifications
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="smsNotifications" ${prefs.sms_notifications ? 'checked' : ''} ${!isEditing ? 'disabled' : ''}>
+                        <label class="form-check-label" for="smsNotifications">
+                            SMS Notifications
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold mb-3">Notification Types</h6>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="orderUpdates" ${prefs.order_updates ? 'checked' : ''} ${!isEditing ? 'disabled' : ''}>
+                        <label class="form-check-label" for="orderUpdates">
+                            Order Updates
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="promotions" ${prefs.promotions ? 'checked' : ''} ${!isEditing ? 'disabled' : ''}>
+                        <label class="form-check-label" for="promotions">
+                            Promotions & Offers
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="newsletter" ${prefs.newsletter ? 'checked' : ''} ${!isEditing ? 'disabled' : ''}>
+                        <label class="form-check-label" for="newsletter">
+                            Newsletter
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function loadAccountStats() {
+    $.get('/api/orders/', function(data) {
+        const orders = data.results || data;
+        const totalOrders = orders.length;
+        const completedOrders = orders.filter(order => order.status === 'delivered').length;
+        
+        $('#totalOrders').text(totalOrders);
+        $('#completedOrders').text(completedOrders);
+    }).fail(function() {
+        $('#totalOrders').text('0');
+        $('#completedOrders').text('0');
+    });
+}
+
+function setupEventHandlers() {
+    // Edit Profile Toggle
+    $('#editProfileBtn').on('click', function() {
+        const isEditing = $(this).text().includes('Edit');
+        
+        if (isEditing) {
+            $(this).html('<i class="fas fa-times me-2"></i>Cancel');
+            $('#saveProfileBtn').show();
+            loadProfileData(); // Reload with edit mode
+        } else {
+            $(this).html('<i class="fas fa-edit me-2"></i>Edit Profile');
+            $('#saveProfileBtn').hide();
+            loadProfileData(); // Reload with view mode
+        }
+    });
+    
+    // Save Profile
+    $('#saveProfileBtn').on('click', function() {
+        saveProfileData();
+    });
+    
+    // Change Password
+    $('#changePasswordBtn').on('click', function() {
+        $('#changePasswordModal').modal('show');
+    });
+    
+    // Save Password
+    $('#savePasswordBtn').on('click', function() {
+        changePassword();
+    });
+    
+    // Export Data
+    $('#exportDataBtn').on('click', function() {
+        exportUserData();
+    });
+    
+    // Delete Account
+    $('#deleteAccountBtn').on('click', function() {
+        $('#deleteAccountModal').modal('show');
+    });
+    
+    // Delete confirmation
+    $('#deleteConfirmation').on('input', function() {
+        $('#confirmDeleteBtn').prop('disabled', $(this).val() !== 'DELETE');
+    });
+    
+    // Confirm Delete
+    $('#confirmDeleteBtn').on('click', function() {
+        deleteAccount();
+    });
+}
+
+function saveProfileData() {
+    // Split data into user and profile data
+    const userData = {
+        first_name: $('#firstName').val(),
+        last_name: $('#lastName').val()
+    };
+    
+    const profileData = {
+        phone_number: $('#phoneNumber').val(),
+        address: $('#streetAddress').val(),
+        city: $('#city').val(),
+        state: $('#state').val(),
+        pincode: $('#zipCode').val(),
+        country: $('#country').val(),
+        date_of_birth: $('#dateOfBirth').val(),
+        gender: $('#gender').val(),
+        preferred_pickup_time: $('#preferredPickupTime').val()
+    };
+    
+    const notificationData = {
+        email_notifications: $('#emailNotifications').is(':checked'),
+        sms_notifications: $('#smsNotifications').is(':checked'),
+        order_updates: $('#orderUpdates').is(':checked'),
+        promotions: $('#promotions').is(':checked'),
+        newsletter: $('#newsletter').is(':checked')
+    };
+    
+    // Save user data (first_name, last_name)
+    $.ajax({
+        url: '/api/auth/user/',
+        method: 'PUT',
+        data: JSON.stringify(userData),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        },
+        success: function(response) {
+            console.log('User data updated successfully');
+        },
+        error: function(xhr) {
+            let errorMessage = 'Failed to update user data';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            }
+            showAlert(errorMessage, 'danger');
+            return;
+        }
+    });
+    
+    // Save profile data (address, phone, etc.)
+    $.ajax({
+        url: '/api/auth/profile/',
+        method: 'PUT',
+        data: JSON.stringify(profileData),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        },
+        success: function(response) {
+            console.log('Profile data updated successfully');
+        },
+        error: function(xhr) {
+            let errorMessage = 'Failed to update profile data';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            }
+            showAlert(errorMessage, 'danger');
+            return;
+        }
+    });
+    
+    // Save notification preferences
+    $.ajax({
+        url: '/api/notifications/preferences/',
+        method: 'PUT',
+        data: JSON.stringify(notificationData),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        },
+        success: function(response) {
+            console.log('Notification preferences updated successfully');
+        },
+        error: function(xhr) {
+            console.log('Failed to update notification preferences');
+        }
+    });
+    
+    // Show success message and reload data
+    showAlert('Profile updated successfully!', 'success');
+    $('#editProfileBtn').html('<i class="fas fa-edit me-2"></i>Edit Profile');
+    $('#saveProfileBtn').hide();
+    loadProfileData();
+}
+
+function changePassword() {
+    const currentPassword = $('#currentPassword').val();
+    const newPassword = $('#newPassword').val();
+    const confirmPassword = $('#confirmPassword').val();
+    
+    if (newPassword !== confirmPassword) {
+        showAlert('New passwords do not match!', 'danger');
+        return;
+    }
+    
+    $.ajax({
+        url: '/api/auth/change-password/',
+        method: 'POST',
+        data: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword
+        }),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        },
+        success: function(response) {
+            showAlert('Password changed successfully!', 'success');
+            $('#changePasswordModal').modal('hide');
+            $('#changePasswordForm')[0].reset();
+        },
+        error: function(xhr) {
+            let errorMessage = 'Failed to change password';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            }
+            showAlert(errorMessage, 'danger');
+        }
+    });
+}
+
+function exportUserData() {
+    $.get('/api/auth/export-data/', function(data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'user-data.json';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        showAlert('Data exported successfully!', 'success');
+    }).fail(function() {
+        showAlert('Failed to export data', 'danger');
+    });
+}
+
+function deleteAccount() {
+    $.ajax({
+        url: '/api/auth/delete-account/',
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        },
+        success: function(response) {
+            showAlert('Account deleted successfully. Redirecting to home page...', 'success');
+            setTimeout(function() {
+                window.location.href = '/';
+            }, 2000);
+        },
+        error: function(xhr) {
+            let errorMessage = 'Failed to delete account';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMessage = xhr.responseJSON.error;
+            }
+            showAlert(errorMessage, 'danger');
+        }
+    });
+}
+
+function getGenderText(gender) {
+    const genderMap = {
+        'M': 'Male',
+        'F': 'Female',
+        'O': 'Other'
+    };
+    return genderMap[gender] || 'Not specified';
+}
+
+function getPickupTimeText(time) {
+    const timeMap = {
+        'morning': 'Morning (8 AM - 12 PM)',
+        'afternoon': 'Afternoon (12 PM - 4 PM)',
+        'evening': 'Evening (4 PM - 8 PM)'
+    };
+    return timeMap[time] || 'Not specified';
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'Not provided';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+</script>
+{% endblock %} 
