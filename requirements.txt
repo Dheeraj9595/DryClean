@@ -30,6 +30,7 @@ kombu==5.5.4
 MarkupSafe==3.0.2
 multidict==6.6.3
 packaging==25.0
+gunicorn==21.2.0
 pillow==11.3.0
 prompt_toolkit==3.0.51
 propcache==0.3.2
@@ -37,6 +38,7 @@ PyJWT==2.10.1
 python-crontab==3.3.0
 python-dateutil==2.9.0.post0
 python-decouple==3.8
+psycopg2-binary==2.9.10
 razorpay==1.4.2
 redis==6.2.0
 requests==2.32.4

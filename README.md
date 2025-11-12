@@ -138,6 +138,41 @@ celery -A dryclean_project worker -l info
 celery -A dryclean_project beat -l info
 ```
 
+## Docker Setup
+
+### Prerequisites
+- Docker
+- Docker Compose (v2+)
+
+### 1. Environment Configuration
+Copy `env.example` to `.env` and update the values as needed. For Docker-based development, use the following database defaults:
+
+```
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=dryclean
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
+```
+
+### 2. Build and Run
+```bash
+docker compose up --build
+```
+
+The web service will be available at `http://localhost:8000/`. Logs from the Django app and PostgreSQL database are streamed to the console.
+
+### 3. Additional Commands
+- Run a one-off management command inside the container:
+  ```bash
+  docker compose run --rm web python manage.py createsuperuser
+  ```
+- Stop and remove containers, networks, and volumes:
+  ```bash
+  docker compose down
+  ```
+
 ## API Documentation
 
 ### Authentication Endpoints
