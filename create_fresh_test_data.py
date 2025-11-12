@@ -334,7 +334,7 @@ def create_fresh_test_data():
         # Create notifications for user's orders
         user_orders = Order.objects.filter(customer=user)
         for order in user_orders:
-            notification_type = random.choice(['order_confirmation', 'pickup_reminder', 'delivery_notification', 'status_update'])
+            notification_type = random.choice(['email', 'sms', 'push'])
             
             notification = Notification.objects.create(
                 user=user,

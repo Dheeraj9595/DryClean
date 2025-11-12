@@ -163,6 +163,8 @@ docker compose up --build
 
 The web service will be available at `http://localhost:8000/`. Logs from the Django app and PostgreSQL database are streamed to the console.
 
+To automatically load the bundled sample dataset on startup, add `LOAD_SAMPLE_DATA=true` to your `.env` (containers use the same file). The script at `create_test_data.py` is idempotent, so you can toggle this flag or rerun it without creating duplicate entries.
+
 ### 3. Additional Commands
 - Run a one-off management command inside the container:
   ```bash
@@ -171,6 +173,10 @@ The web service will be available at `http://localhost:8000/`. Logs from the Dja
 - Stop and remove containers, networks, and volumes:
   ```bash
   docker compose down
+  ```
+- Manually seed the database (if `LOAD_SAMPLE_DATA` is `false`):
+  ```bash
+  docker compose run --rm web python create_test_data.py
   ```
 
 ## API Documentation
